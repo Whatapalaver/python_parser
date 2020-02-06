@@ -3,7 +3,7 @@ import sys
 import os
 import json
 import csv
-from helpers.extract import extract_objects, extract_objects_from_file
+import helpers.extract
 
 
 flat_keys = ['object', 'uniqueID', 'museumNumber', 'imageResolution', 'materialsTechniques', 'productionNote', 'copyNumber',
@@ -16,12 +16,15 @@ unknowns = ['contentOther', 'contentPlace', 'contentConcept', 'contentLiteraryRe
 nested_keys = ['dimensions', 'artistMakerPeople', 'galleryLocation', 'placeOfOrigin', 'categories', 'date', 'marksAndInscriptions',
                'artistMakerOrganisation', 'title', 'techniques', 'contentPerson', 'artistMakerPerson', 'materials', 'bibliographicReferences']
 
+nested_field_method = {'title': helpers.extract.title, 'artistMakerPeople': helpers.extract.people, 'artistMakerOrganisation': helpers.extract.organisation,
+                       'artistMakerPerson': helpers.extract.person}
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-o", "--output", help="File path and name for output", default="dumps/")
+        "-o", "--output", help="Path for output", default="dumps/")
     parser.add_argument("-m", "--multifile_output",
                         help="Multiple output files", action='store_true', default=False)
 
@@ -44,7 +47,6 @@ def flat_key_headers(object_data):
 
 
 def object_key_lengths(object_data):
-    # print([key for key in object_data.keys() if key in flat_keys])
     return [len(object_data[key]['text']) for key in object_data.keys() if key in object_keys]
 
 
@@ -52,8 +54,7 @@ def array_key_headers(object_data):
     return [key + ": item_count" for key in object_data.keys() if key in array_keys]
 
 
-def array_key_lengths(object_data):
-    # print([key for key in object_data.keys() if key in flat_keys])
+def array_key_counts(object_data):
     return [len(object_data[key]) for key in object_data.keys() if key in array_keys]
 
 
@@ -61,21 +62,28 @@ def object_key_headers(object_data):
     return [key for key in object_data.keys() if key in object_keys]
 
 
+def nested_key_lengths(object_data):
+    return [len(nested_field_method[key](object_data)) for key in object_data.keys() if key in nested_field_method.keys()]
+
+
+def nested_key_headers(object_data):
+    return [key for key in object_data.keys() if key in nested_field_method.keys()]
+
+
 def header(object_data):
     header = flat_key_headers(object_data) + array_key_headers(object_data) + \
-        object_key_headers(object_data)
+        object_key_headers(object_data) + nested_key_headers(object_data)
     header.insert(0, 'UniqueID')
     return header
 
 
-def object_counts(object_data):
-    return flat_key_lengths(object_data) + array_key_lengths(object_data) + \
-        object_key_lengths(object_data)
+def object_lengths(object_data):
+    return flat_key_lengths(object_data) + array_key_counts(object_data) + object_key_lengths(object_data) + nested_key_lengths(object_data)
 
 
 def csv_data(object_data):
 
-    list = object_counts(object_data)
+    list = object_lengths(object_data)
     list.insert(0, object_data['uniqueID'])
     return list
 
@@ -97,7 +105,7 @@ def main(argv):
                 print(f'Found directory: {dirpath}')
                 for input_file_name in files:
                     print('Filename: ', input_file_name)
-                    objects = extract_objects_from_file(
+                    objects = helpers.extract.objects_from_file(
                         dirpath+input_file_name)
                     # print("first object: ", objects[0])
                     csv_header = header(objects[0])
@@ -119,14 +127,15 @@ def main(argv):
                           'objectHistoryNote', 'object', 'summary', 'productionNote', 'recordCreationDate', 'uniqueID',
                           'physicalDescription', 'materialsTechniques', 'dimensionsNote', 'imageResolution', 'contentDescription',
                           'recordModificationDate', 'museumNumber', 'aspects: item_count', 'images: item_count',
-                          'objectNumber: item_count', 'collectionCode', 'productionType']
+                          'objectNumber: item_count', 'collectionCode', 'productionType', 'artistMakerPeople',
+                          'artistMakerOrganisation', 'artistMakerPerson', 'title']
             with open(output_file, "w", newline='') as f:
                 writer = csv.writer(f, delimiter=',')
                 writer.writerow(csv_header)  # write the header
                 for dirpath, dirnames, files in os.walk(args.json_input, topdown=False):
                     for input_file_name in files:
                         print('Processing filename: ', input_file_name)
-                        objects = extract_objects_from_file(
+                        objects = helpers.extract.objects_from_file(
                             dirpath+input_file_name)
                         # write the actual content line by line
                         for object_dump in objects:

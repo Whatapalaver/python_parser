@@ -8,9 +8,9 @@ import sys
 
 not_used = ['uniqueID', 'museumNumber', 'imageResolution', 'aspects', 'images',
             'recordModificationDate', 'recordCreationDate', 'objectNumber', 'copyNumber']
-plot_keys = ['object', 'materialsTechniques', 'productionNote',
-             'dimensionsNote', 'creditLine', 'descriptiveLine', 'contentDescription',
-             'physicalDescription', 'summary', 'objectHistoryNote', 'historicalContextNote', ]
+plot_keys = ['object', 'materialsTechniques', 'productionNote', 'artistMakerOrganisation', 'artistMakerPerson',
+             'dimensionsNote', 'creditLine', 'descriptiveLine', 'contentDescription', 'artistMakerPeople',
+             'physicalDescription', 'summary', 'objectHistoryNote', 'historicalContextNote', 'title']
 
 
 def compute_histogram_bins(data, desired_bin_size, max_size):
