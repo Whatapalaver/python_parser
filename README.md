@@ -9,6 +9,7 @@
 
 - Run all available fields with defaults set: `python analysis/hist.py`
 - Specific field histogram with max y-axis = 750 and bucke size of 20: `python analysis/hist.py -f physicalDescription -m 750 -b 20`
+- To generate a full scale insetted subplot for the title field `python analysis/hist.py -f title -m 250 -b 10 -i dumps/output.csv -s`
 
 ## TODO
 

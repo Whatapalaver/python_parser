@@ -36,6 +36,8 @@ def parse_args(args):
         "-i", "--input", help="File path and name for input", default="dumps/output.csv")
     parser.add_argument("-f", "--field_name",
                         help="Specific field name for single histogram")
+    parser.add_argument("-s", "--subplot_inset", help="Show full scale hist as inset",
+                        action='store_true', default=False)
 
     parser.add_argument("-b", "--bin_size", type=int,
                         help="specify bucket width for bins", default=10)
@@ -45,22 +47,44 @@ def parse_args(args):
     return parser.parse_args(args[1:])
 
 
-def generate_histogram(data, key, bin_size, max_size):
-    data_to_plot = data[key]
+def generate_histogram(data, field_name, bin_size, max_size):
+    data_to_plot = data[field_name]
     bins = compute_histogram_bins(data_to_plot, bin_size, max_size)
     # bins = quantile_bins(data_to_plot)
     print(bins)
 
-    legend = [key]
+    legend = [field_name]
     plt.hist(data_to_plot[data_to_plot != 0], color=[
         'orange'], bins=bins, alpha=0.5, histtype='stepfilled')
     plt.xlabel("Field Length")
     plt.ylabel("Frequency")
     plt.legend(legend)
-    # plt.xticks(range(0, 5))
-    # plt.yticks(range(1, 200))
-    plt.title('Field Length Distribution across Object API')
-    plt.show()
+    plt.title(
+        f"Length Distribution field '{field_name}' across Object API", fontsize="x-large")
+
+
+def generate_subplot(data, field_name, bin_size, max_size):
+    data_to_plot = data[field_name]
+    bins_max = compute_histogram_bins(data_to_plot, bin_size, max_size)
+    bins_full = compute_histogram_bins(data_to_plot, bin_size, max_size=None)
+
+    # Show inset charts
+    fig, axes1 = plt.subplots()
+    st = fig.suptitle(
+        f"Length Distribution field '{field_name}' across Object API", fontsize="x-large")
+
+    # These are in unitless percentages of the figure size. (0,0 is bottom left)
+    left, bottom, width, height = [0.55, 0.5, 0.3, 0.3]
+    axes1.hist(data_to_plot[data_to_plot != 0], color=[
+        'orange'], bins=bins_max, alpha=0.5, histtype='stepfilled')
+    axes2 = plt.axes([left, bottom, width, height])
+    axes2.hist(data_to_plot[data_to_plot != 0], color=[
+        'green'], bins=bins_full, alpha=0.5, histtype='stepfilled')
+
+    # Add labels
+    axes1.set(xlabel="Field Length", ylabel="Frequency")
+    axes2.set_title("Full Distribution", fontsize=9)
+    axes1.legend([field_name], loc="lower right")
 
 
 def main(argv):
@@ -68,11 +92,21 @@ def main(argv):
     print('Args: ', args)
     data = pd.read_csv(args.input)
     # print(type(data))
-    if args.field_name:
+    # print(data.astype(bool).sum(axis=0))
+    print('nonzero', np.count_nonzero(data, axis=0))
+    if args.field_name and args.subplot_inset:
+        print('Creating subplots for ', args.field_name)
+        generate_subplot(data, args.field_name, args.bin_size, args.max_size)
+        plt.show()
+    elif args.field_name:
+        print('Creating histogram for ', args.field_name)
         generate_histogram(data, args.field_name, args.bin_size, args.max_size)
+        plt.show()
     else:
+        print('Creating multiple histograms')
         for key in plot_keys:
             generate_histogram(data, key, args.bin_size, args.max_size)
+            plt.show()
 
 
 # Run the main() script method
