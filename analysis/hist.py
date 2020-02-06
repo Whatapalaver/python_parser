@@ -4,9 +4,11 @@ import numpy.random as random
 import matplotlib.pyplot as plt
 import pandas as pd
 
-plot_keys = ['object', 'uniqueID', 'museumNumber', 'imageResolution', 'materialsTechniques', 'productionNote', 'copyNumber',
-             'dimensionsNote', 'creditLine', 'descriptiveLine', 'contentDescription', 'recordModificationDate',
-             'recordCreationDate', 'physicalDescription', 'summary', 'objectHistoryNote', 'historicalContextNote', 'objectNumber', 'aspects', 'images']
+not_used = ['uniqueID', 'museumNumber', 'imageResolution',
+            'recordModificationDate', 'recordCreationDate', 'objectNumber', 'copyNumber']
+plot_keys = ['object', 'materialsTechniques', 'productionNote',
+             'dimensionsNote', 'creditLine', 'descriptiveLine', 'contentDescription',
+             'physicalDescription', 'summary', 'objectHistoryNote', 'historicalContextNote', 'aspects', 'images']
 # x = np.random.random_integers(1, 100, 5)
 # print(x)
 # plt.hist(x, bins=20)

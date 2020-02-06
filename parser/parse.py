@@ -1,8 +1,9 @@
 import argparse
 import sys
+import os
 import json
 import csv
-from helpers.extract import extract_objects
+from helpers.extract import extract_objects, extract_objects_from_file
 
 
 flat_keys = ['object', 'uniqueID', 'museumNumber', 'imageResolution', 'materialsTechniques', 'productionNote', 'copyNumber',
@@ -20,7 +21,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "-o", "--output", help="File path and name for output", default="dumps/output.csv")
+        "-o", "--output", help="File path and name for output", default="dumps/")
 
     group = parser.add_mutually_exclusive_group(required=True)
 
@@ -77,22 +78,34 @@ def csv_data(object_data):
     return list
 
 
+def output_filename(file):
+    without_ext = file.split('.')[:-1]
+    s = '-'
+    return 'output' + s + s.join(without_ext)
+
+
 def main(argv):
     args = parse_args(argv)
     print('Args: ', args)
 
-    objects = extract_objects(args)
-    # print("first object: ", objects[0])
-    csv_header = header(objects[0])
+    if args.json_input:
+        for dirpath, dirnames, files in os.walk(args.json_input, topdown=False):
+            print(f'Found directory: {dirpath}')
+            for input_file_name in files:
+                print('Filename: ', input_file_name)
+                objects = extract_objects_from_file(dirpath+input_file_name)
+                # print("first object: ", objects[0])
+                csv_header = header(objects[0])
+                output_file = args.output + \
+                    output_filename(input_file_name) + '.csv'
 
-    with open(args.output, "w", newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(csv_header)  # write the header
-        # write the actual content line by line
-        for object_dump in objects:
-            object = object_dump
-            line = csv_data(object)
-            writer.writerow(line)
+                with open(output_file, "w", newline='') as f:
+                    writer = csv.writer(f, delimiter=',')
+                    writer.writerow(csv_header)  # write the header
+                    # write the actual content line by line
+                    for object_dump in objects:
+                        line = csv_data(object_dump)
+                        writer.writerow(line)
 
     return 0
 
