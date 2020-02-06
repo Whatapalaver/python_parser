@@ -130,5 +130,4 @@ dmypy.json
 
 .vscode
 
-dumps/
 data_all/

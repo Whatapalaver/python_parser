@@ -22,6 +22,8 @@ def parse_args(args):
 
     parser.add_argument(
         "-o", "--output", help="File path and name for output", default="dumps/")
+    parser.add_argument("-m", "--multifile_output",
+                        help="Multiple output files", action='store_true', default=False)
 
     group = parser.add_mutually_exclusive_group(required=True)
 
@@ -89,23 +91,47 @@ def main(argv):
     print('Args: ', args)
 
     if args.json_input:
-        for dirpath, dirnames, files in os.walk(args.json_input, topdown=False):
-            print(f'Found directory: {dirpath}')
-            for input_file_name in files:
-                print('Filename: ', input_file_name)
-                objects = extract_objects_from_file(dirpath+input_file_name)
-                # print("first object: ", objects[0])
-                csv_header = header(objects[0])
-                output_file = args.output + \
-                    output_filename(input_file_name) + '.csv'
+        if args.multifile_output:
+            # output multiple files
+            for dirpath, dirnames, files in os.walk(args.json_input, topdown=False):
+                print(f'Found directory: {dirpath}')
+                for input_file_name in files:
+                    print('Filename: ', input_file_name)
+                    objects = extract_objects_from_file(
+                        dirpath+input_file_name)
+                    # print("first object: ", objects[0])
+                    csv_header = header(objects[0])
+                    output_file = args.output + \
+                        output_filename(input_file_name) + '.csv'
 
-                with open(output_file, "w", newline='') as f:
-                    writer = csv.writer(f, delimiter=',')
-                    writer.writerow(csv_header)  # write the header
-                    # write the actual content line by line
-                    for object_dump in objects:
-                        line = csv_data(object_dump)
-                        writer.writerow(line)
+                    with open(output_file, "w", newline='') as f:
+                        writer = csv.writer(f, delimiter=',')
+                        writer.writerow(csv_header)  # write the header
+                        # write the actual content line by line
+                        for object_dump in objects:
+                            line = csv_data(object_dump)
+                            writer.writerow(line)
+        else:
+            # output single file
+            output_file = args.output + 'output.csv'
+            # Headers need amending if I amend what gets processed
+            csv_header = ['UniqueID', 'descriptiveLine', 'copyNumber', 'creditLine', 'historicalContextNote',
+                          'objectHistoryNote', 'object', 'summary', 'productionNote', 'recordCreationDate', 'uniqueID',
+                          'physicalDescription', 'materialsTechniques', 'dimensionsNote', 'imageResolution', 'contentDescription',
+                          'recordModificationDate', 'museumNumber', 'aspects: item_count', 'images: item_count',
+                          'objectNumber: item_count', 'collectionCode', 'productionType']
+            with open(output_file, "w", newline='') as f:
+                writer = csv.writer(f, delimiter=',')
+                writer.writerow(csv_header)  # write the header
+                for dirpath, dirnames, files in os.walk(args.json_input, topdown=False):
+                    for input_file_name in files:
+                        print('Processing filename: ', input_file_name)
+                        objects = extract_objects_from_file(
+                            dirpath+input_file_name)
+                        # write the actual content line by line
+                        for object_dump in objects:
+                            line = csv_data(object_dump)
+                            writer.writerow(line)
 
     return 0
 
