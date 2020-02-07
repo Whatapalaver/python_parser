@@ -5,11 +5,17 @@
 - With a single file output for use as histogram input: `python parser/parse.py -j data_all/ -o dumps/`
 - For multi-file output: `python parser/parse.py -j data_all/ -o dumps/ -m`
 
-## Run the Histogram Generator
+## Run the Analysis Plotter
 
-- Run all available fields with defaults set: `python analysis/hist.py`
-- Specific field histogram with max y-axis = 750 and bucke size of 20: `python analysis/hist.py -f physicalDescription -m 750 -b 20`
-- To generate a full scale insetted subplot for the title field `python analysis/hist.py -f title -m 250 -b 10 -i dumps/output.csv -s`
+Histograms triggered with -c flag:
+
+- Run all available fields with defaults set: `python analysis/hist.py -c`
+- Specific field histogram with max y-axis = 750 and bucket size of 20: `python analysis/hist.py -f physicalDescription -m 750 -b 20 -c`
+- To generate a full scale insetted subplot for the title field `python analysis/hist.py -f title -m 250 -b 10 -i dumps/output.csv -s -c`
+
+Baar chart triggered with -x flag:
+
+- Generate a chart showing field population with `python analysis/hist.py -x`
 
 ## TODO
 

@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 import numpy.random as random
+import matplotlib.ticker
 import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
@@ -43,6 +44,13 @@ def parse_args(args):
                         help="specify bucket width for bins", default=10)
     parser.add_argument("-m", "--max_size", type=int,
                         help="limit max y-axis, best for single field histogram", default=None)
+
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    group.add_argument("-c", "--histogram", help="Generate histogram output",
+                       action='store_true', default=False)
+    group.add_argument("-x", "--barchart", help="Generate % population bar chart",
+                       action='store_true', default=False)
 
     return parser.parse_args(args[1:])
 
@@ -87,26 +95,48 @@ def generate_subplot(data, field_name, bin_size, max_size):
     axes1.legend([field_name], loc="lower right")
 
 
+def generate_barchart(data):
+    print(np.count_nonzero(data, axis=0))
+    print(data.astype(bool).sum(axis=0))
+    names = data.columns
+    fig = plt.figure(figsize=(9, 6))
+    st = fig.suptitle(
+        "Percentage utilisation by Field Type", fontsize="x-large", verticalalignment='top')
+    ax = fig.add_subplot(111)
+    yvals = range(len(names))
+    values = (np.count_nonzero(data, axis=0)) / \
+        max(np.count_nonzero(data, axis=0)) * 100
+    ax.barh(yvals, values, align='center', alpha=0.4)
+    plt.yticks(yvals, names)
+    x_formatter = matplotlib.ticker.PercentFormatter()
+    ax.xaxis.set_major_formatter(x_formatter)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.90])
+
+
 def main(argv):
     args = parse_args(argv)
     print('Args: ', args)
     data = pd.read_csv(args.input)
-    # print(type(data))
-    # print(data.astype(bool).sum(axis=0))
-    print('nonzero', np.count_nonzero(data, axis=0))
-    if args.field_name and args.subplot_inset:
-        print('Creating subplots for ', args.field_name)
-        generate_subplot(data, args.field_name, args.bin_size, args.max_size)
+
+    if args.barchart:
+        generate_barchart(data)
         plt.show()
-    elif args.field_name:
-        print('Creating histogram for ', args.field_name)
-        generate_histogram(data, args.field_name, args.bin_size, args.max_size)
-        plt.show()
-    else:
-        print('Creating multiple histograms')
-        for key in plot_keys:
-            generate_histogram(data, key, args.bin_size, args.max_size)
+    elif args.histogram:
+        if args.field_name and args.subplot_inset:
+            print('Creating subplots for ', args.field_name)
+            generate_subplot(data, args.field_name,
+                             args.bin_size, args.max_size)
             plt.show()
+        elif args.field_name:
+            print('Creating histogram for ', args.field_name)
+            generate_histogram(data, args.field_name,
+                               args.bin_size, args.max_size)
+            plt.show()
+        else:
+            print('Creating multiple histograms')
+            for key in plot_keys:
+                generate_histogram(data, key, args.bin_size, args.max_size)
+                plt.show()
 
 
 # Run the main() script method
